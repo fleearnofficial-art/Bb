@@ -1,0 +1,230 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered Fleearn student or user profile",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full name of the user",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Contact and Google account email address",
+          "maxLength": 150
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar URL of the user",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account registration timestamp"
+        }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Course or track enrollment entry",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID or anonymous guest identifier",
+          "maxLength": 128
+        },
+        "courseId": {
+          "type": "string",
+          "description": "ID of the enrolled course",
+          "maxLength": 64
+        },
+        "courseTitle": {
+          "type": "string",
+          "description": "Title of the course",
+          "maxLength": 150
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Full name of the student enrolling",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Student email address",
+          "maxLength": 150
+        },
+        "phone": {
+          "type": "string",
+          "description": "Student phone or WhatsApp number",
+          "maxLength": 30
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment gateway chosen (bkash, nagad, card)",
+          "maxLength": 20
+        },
+        "priceBDT": {
+          "type": "number",
+          "description": "Price paid in BDT"
+        },
+        "status": {
+          "type": "string",
+          "description": "Enrollment status",
+          "enum": ["active", "completed", "pending"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Server timestamp when enrollment occurred"
+        }
+      },
+      "required": ["userId", "courseId", "courseTitle", "studentName", "email", "phone", "paymentMethod", "priceBDT", "status", "createdAt"]
+    },
+    "WorkshopRegistration": {
+      "title": "WorkshopRegistration",
+      "description": "Seat reservation for live free masterclasses",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "workshopId": {
+          "type": "string",
+          "description": "Identifier of the masterclass",
+          "maxLength": 64
+        },
+        "workshopTitle": {
+          "type": "string",
+          "description": "Title of the workshop",
+          "maxLength": 150
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address for meeting link",
+          "maxLength": 150
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Server timestamp of reservation"
+        }
+      },
+      "required": ["userId", "workshopId", "workshopTitle", "email", "createdAt"]
+    },
+    "MentorBooking": {
+      "title": "MentorBooking",
+      "description": "1-on-1 consultation booking with top mentors",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "mentorId": {
+          "type": "string",
+          "description": "Identifier of the mentor",
+          "maxLength": 64
+        },
+        "mentorName": {
+          "type": "string",
+          "description": "Name of the mentor",
+          "maxLength": 100
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Name of the student requesting booking",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of the student",
+          "maxLength": 150
+        },
+        "preferredDate": {
+          "type": "string",
+          "description": "Requested date for consultation",
+          "maxLength": 30
+        },
+        "status": {
+          "type": "string",
+          "description": "Session status",
+          "enum": ["scheduled", "completed", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of booking"
+        }
+      },
+      "required": ["userId", "mentorId", "mentorName", "studentName", "email", "preferredDate", "status", "createdAt"]
+    },
+    "SavedRoadmap": {
+      "title": "SavedRoadmap",
+      "description": "Customized 6-month career roadmap saved by student",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "background": {
+          "type": "string",
+          "description": "Selected background category",
+          "maxLength": 50
+        },
+        "goal": {
+          "type": "string",
+          "description": "Selected primary goal",
+          "maxLength": 50
+        },
+        "commitment": {
+          "type": "string",
+          "description": "Selected daily time commitment",
+          "maxLength": 50
+        },
+        "title": {
+          "type": "string",
+          "description": "Roadmap title",
+          "maxLength": 150
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when saved"
+        }
+      },
+      "required": ["userId", "background", "goal", "commitment", "title", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Private student profile data for verified user"
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "Course admissions and payment verification records"
+    },
+    "/workshop_registrations/{registrationId}": {
+      "schema": "WorkshopRegistration",
+      "description": "Live masterclass seats reserved by learners"
+    },
+    "/mentor_bookings/{bookingId}": {
+      "schema": "MentorBooking",
+      "description": "1-on-1 career consultation bookings with instructors"
+    },
+    "/saved_roadmaps/{roadmapId}": {
+      "schema": "SavedRoadmap",
+      "description": "Personalized AI-generated learning sprints saved to cloud"
+    }
+  }
+}

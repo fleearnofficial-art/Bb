@@ -1,0 +1,142 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Connection validation endpoint
+    match /test/{docId} {
+      allow get: if true;
+    }
+
+    // User Profile
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId', 'email', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'displayName', 'email', 'photoURL', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.email is string && data.email.size() <= 150 &&
+             data.createdAt is timestamp &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']);
+    }
+
+    // Course Enrollments
+    function isValidEnrollment(data) {
+      return data.keys().hasAll(['userId', 'courseId', 'courseTitle', 'studentName', 'email', 'phone', 'paymentMethod', 'priceBDT', 'status', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'courseId', 'courseTitle', 'studentName', 'email', 'phone', 'paymentMethod', 'priceBDT', 'status', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.courseId is string && data.courseId.size() <= 64 &&
+             data.courseTitle is string && data.courseTitle.size() <= 150 &&
+             data.studentName is string && data.studentName.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.paymentMethod is string && data.paymentMethod.size() <= 20 &&
+             data.priceBDT is number &&
+             data.status in ['active', 'completed', 'pending'] &&
+             data.createdAt is timestamp;
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(enrollmentId) && isValidEnrollment(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
+                       isValidEnrollment(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+
+    // Workshop Registrations
+    function isValidWorkshopRegistration(data) {
+      return data.keys().hasAll(['userId', 'workshopId', 'workshopTitle', 'email', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'workshopId', 'workshopTitle', 'email', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.workshopId is string && data.workshopId.size() <= 64 &&
+             data.workshopTitle is string && data.workshopTitle.size() <= 150 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.createdAt is timestamp;
+    }
+
+    match /workshop_registrations/{registrationId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(registrationId) && isValidWorkshopRegistration(incoming()) && incoming().createdAt == request.time;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Mentor Bookings
+    function isValidMentorBooking(data) {
+      return data.keys().hasAll(['userId', 'mentorId', 'mentorName', 'studentName', 'email', 'preferredDate', 'status', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'mentorId', 'mentorName', 'studentName', 'email', 'preferredDate', 'status', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.mentorId is string && data.mentorId.size() <= 64 &&
+             data.mentorName is string && data.mentorName.size() <= 100 &&
+             data.studentName is string && data.studentName.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.preferredDate is string && data.preferredDate.size() <= 30 &&
+             data.status in ['scheduled', 'completed', 'cancelled'] &&
+             data.createdAt is timestamp;
+    }
+
+    match /mentor_bookings/{bookingId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(bookingId) && isValidMentorBooking(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
+                       isValidMentorBooking(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'preferredDate']);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Saved Roadmaps
+    function isValidRoadmap(data) {
+      return data.keys().hasAll(['userId', 'background', 'goal', 'commitment', 'title', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'background', 'goal', 'commitment', 'title', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.background is string && data.background.size() <= 50 &&
+             data.goal is string && data.goal.size() <= 50 &&
+             data.commitment is string && data.commitment.size() <= 50 &&
+             data.title is string && data.title.size() <= 150 &&
+             data.createdAt is timestamp;
+    }
+
+    match /saved_roadmaps/{roadmapId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(roadmapId) && isValidRoadmap(incoming()) && incoming().createdAt == request.time;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

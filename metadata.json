@@ -1,0 +1,6 @@
+{
+  "name": "Fleearn - 3D Skill & Freelance Learning Platform",
+  "description": "Fleearn is a premium 3D interactive ed-tech and freelance mastery platform offering immersive learning, AI skill roadmaps, mentor matching, and career accelerators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
